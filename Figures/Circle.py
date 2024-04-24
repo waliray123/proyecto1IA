@@ -6,7 +6,8 @@ class Circle:
         self.y = y
         self.selected = False
         self.outline = ""
-        self.aristas = []
+        self.aristasOut = []
+        self.aristasIn = []
 
     def toggle_selection(self, event, selected_circles, creando_arista, borrando_arista):
         if creando_arista or borrando_arista:
@@ -39,5 +40,7 @@ class Circle:
         self.canvas.move(self.shape, dx, dy)
         self.x = event.x
         self.y = event.y
-        for arista in self.aristas:
+        for arista in self.aristasOut:
+            arista.actualizar()
+        for arista in self.aristasIn:
             arista.actualizar()
