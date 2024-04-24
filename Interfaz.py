@@ -29,6 +29,7 @@ class Interfaz:
         self.boton_terminar_arista = tk.Button(self.root, text="Terminar Arista", command=self.crear_arista)
         self.boton_terminar_arista.pack_forget()
         self.controlFigures = ControlFigures()
+        self.nameNode = 0
 
     def toggle_creacion_arista(self):
         self.creando_arista = not self.creando_arista
@@ -156,7 +157,8 @@ class Interfaz:
 
 
     def crear_nodo(self):
-        circle = Circle(self.canvas, 50, 50, "white")
+        self.nameNode += 1
+        circle = Circle(self.canvas, 50, 50, "white",str(self.nameNode))
         self.circles.append(circle)
         self.canvas.tag_bind(circle.shape, "<Button-1>", lambda event, circle=circle: circle.toggle_selection(event, self.selected_circles, self.creando_arista, self.borrando_arista))
         self.canvas.tag_bind(circle.shape, "<B1-Motion>", lambda event, circle=circle: circle.move(event))

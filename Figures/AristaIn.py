@@ -8,7 +8,7 @@ class AristaIn:
         self.circle1 = Circle(self.canvas, circle1.x - 50, circle1.y, "blue")
         self.canvas.tag_bind(self.circle2.shape, "<B1-Motion>", lambda event, circle=self.circle2: circle.move(event))
         self.capacity = 0
-        self.percentage = 0
+        self.percentage = 0 # min percentage of usage
         self.start_x, self.start_y = circle1.x, circle1.y
         self.end_x, self.end_y = self.circle2.x, self.circle2.y         
         self.arrow = self.canvas.create_line(self.start_x, self.start_y, self.end_x, self.end_y, arrow=tk.LAST, fill=color)
@@ -38,8 +38,8 @@ class AristaIn:
             self.end_y = y2 - (y2 - y1) * r2 / d
     
     def setNewProperties(self,capacity,percentage):
-        self.capacity = capacity
-        self.percentage = percentage        
+        self.capacity = int(capacity)
+        self.percentage = int(percentage)
         self.canvas.itemconfig(self.capacity_text, text=f"Capacidad: {self.capacity}")
         self.canvas.itemconfig(self.percentage_text, text=f"Porcentaje: {self.percentage}%")
     

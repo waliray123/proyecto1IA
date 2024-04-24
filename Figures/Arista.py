@@ -35,8 +35,8 @@ class Arista:
         self.canvas.coords(self.percentage_text, (self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2 + 15)
     
     def setNewProperties(self,capacity,percentage):
-        self.capacity = capacity
-        self.percentage = percentage        
+        self.capacity = int(capacity)
+        self.percentage = int(percentage)
         self.canvas.itemconfig(self.capacity_text, text=f"Capacidad: {self.capacity}")
         self.canvas.itemconfig(self.percentage_text, text=f"Porcentaje: {self.percentage}%")
     

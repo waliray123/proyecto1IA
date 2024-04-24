@@ -1,5 +1,5 @@
 class Circle:
-    def __init__(self, canvas, x, y, color):
+    def __init__(self, canvas, x, y, color,name):
         self.canvas = canvas
         self.shape = canvas.create_oval(x-20, y-20, x+20, y+20, fill=color)
         self.x = x
@@ -8,6 +8,9 @@ class Circle:
         self.outline = ""
         self.aristasOut = []
         self.aristasIn = []
+        self.name = name
+        self.name_text = self.canvas.create_text(self.x, self.y, text=self.name, fill="black")
+        
 
     def toggle_selection(self, event, selected_circles, creando_arista, borrando_arista):
         if creando_arista or borrando_arista:
@@ -38,6 +41,7 @@ class Circle:
         dx = event.x - self.x
         dy = event.y - self.y
         self.canvas.move(self.shape, dx, dy)
+        self.canvas.move(self.name_text, dx, dy)
         self.x = event.x
         self.y = event.y
         for arista in self.aristasOut:

@@ -8,9 +8,16 @@ class ControlFigures:
         print("controlCreated")
         self.exceptions = []
 
-    def validateAllFigures(self,aristas,circles):
+    def validateAllFigures(self,aristasIn,aristasOut,aristas,circles):
         self.exceptions = []
-        self.validateAristasAreAllPercentage(circles)
+        #self.validateAristasAreAllPercentage(circles)
+        if len(aristas) == 0:
+            self.exceptions.append(ExceptionFigure("2","Hay que agregar aristas normales" ))
+        if len(aristasIn) == 0:
+            self.exceptions.append(ExceptionFigure("2","Se necesitan Aristas de entrada" ))
+        if len(aristasOut) == 0:
+            self.exceptions.append(ExceptionFigure("2","Se necesitan Aristas de salida " ))
+
 
     
     def validateAristasAreAllPercentage(self,circles):        
@@ -21,6 +28,8 @@ class ControlFigures:
                 self.exceptions.append(ExceptionFigure("2","Aristas de nodo: , Sobrepasan el 100%" ))
             elif totalPercentage < 100:
                 self.exceptions.append(ExceptionFigure("2","Aristas de nodo: , Necesitan alcanzar el 100%" ))
+        
+        
 
 
             

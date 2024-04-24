@@ -38,8 +38,8 @@ class AristaOutput:
             self.end_y = y2 - (y2 - y1) * r2 / d
     
     def setNewProperties(self,capacity,percentage):
-        self.capacity = capacity
-        self.percentage = percentage        
+        self.capacity = int(capacity)
+        self.percentage = int(percentage)       
         self.canvas.itemconfig(self.capacity_text, text=f"Capacidad: {self.capacity}")
         self.canvas.itemconfig(self.percentage_text, text=f"Porcentaje: {self.percentage}%")
     
