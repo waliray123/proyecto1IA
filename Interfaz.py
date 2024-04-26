@@ -1,18 +1,20 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import simpledialog
 
 from Figures.Arista import Arista
 from Figures.AristaOutput import AristaOutput
 from Figures.AristaIn import AristaIn
 from Figures.Circle import Circle
 from Controllers.controlFigures import ControlFigures
+from Model.Model import Model
 
 class Interfaz:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Aplicación")
-        self.canvas = tk.Canvas(self.root, width=400, height=300, bg="white")
-        self.canvas.pack()
+        self.canvas = tk.Canvas(self.root, width=1400, height=600, bg="white")
+        self.canvas.pack()        
         self.circles = []
         self.aristas = []
         self.aristasIn = []
@@ -29,7 +31,11 @@ class Interfaz:
         self.boton_terminar_arista = tk.Button(self.root, text="Terminar Arista", command=self.crear_arista)
         self.boton_terminar_arista.pack_forget()
         self.controlFigures = ControlFigures()
-        self.nameNode = 0
+        self.nameNode = 0    
+        self.population_size = 0
+        self.mutation_rate = 0
+        self.generation_or_efficiency = 0
+        self.value_generation_or_efficiency = 0
 
     def toggle_creacion_arista(self):
         self.creando_arista = not self.creando_arista
@@ -182,6 +188,7 @@ class Interfaz:
                 circle = next(circle for circle in self.circles if circle.shape == circle_id[0])
                 self.circles.remove(circle)
                 event.widget.delete(circle.shape)
+                event.widget.delete(circle.name_text)
                 for arista in circle.aristasIn:
                     self.aristas.remove(arista)
                     self.aristasIn.remove(arista)
@@ -237,10 +244,79 @@ class Interfaz:
                 self.canvas.tag_unbind(aristaOut.arrow, "<Button-1>")
         self.actualizando_arista = False
 
+
+    def formInitModel(self):
+        formulario = tk.Toplevel()
+        formulario.title("Ingreso de Valores de Modelo")
+    
+        population_label = tk.Label(formulario, text="Tamaño Poblacion:")
+        population_label.grid(row=0, column=0, padx=5, pady=5)
+        population_entry = tk.Entry(formulario)
+        population_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        mutation_label = tk.Label(formulario, text="Tasa de Mutacion:")
+        mutation_label.grid(row=1, column=0, padx=5, pady=5)
+        mutation_entry = tk.Entry(formulario)
+        mutation_entry.grid(row=1, column=1, padx=5, pady=5)        
+
+        aditional_label = tk.Label(formulario, text="Número de generaciones:")
+        aditional_label.grid(row=3, column=0, padx=5, pady=5)
+        aditional_entry = tk.Entry(formulario)
+        aditional_entry.grid(row=3, column=1, padx=5, pady=5)
+
+        def mostrar_campo_adicional(selected_option):            
+            if selected_option == "Numero de generaciones":
+                aditional_label.config(text="Número de generaciones:")
+                aditional_entry.grid(row=3, column=1)
+            elif selected_option == "Porcentaje de eficiencia":
+                aditional_label.config(text="Porcentaje de eficiencia:")
+                aditional_entry.grid(row=3, column=1)
+
+        finish_criteria = tk.StringVar(formulario)
+        finish_criteria.set("Numero de generaciones")
+        
+        finish_label = tk.Label(formulario, text="Criterio de finalización:")
+        finish_label.grid(row=2, column=0, padx=5, pady=5)
+        finish_entry = tk.OptionMenu(formulario, finish_criteria, "Numero de generaciones", "Porcentaje de eficiencia", command=mostrar_campo_adicional)
+        finish_entry.grid(row=2, column=1, padx=5, pady=5)
+        
+        def insertData():    
+            #DATA FORM FORM
+            self.population_size = int(population_entry.get())
+            self.mutation_rate = int(mutation_entry.get())
+            self.generation_or_efficiency = finish_criteria.get()
+            self.value_generation_or_efficiency = int(aditional_entry.get())
+            formulario.destroy()
+    
+        actualizar_button = tk.Button(formulario, text="Ingresar", command=insertData)
+        actualizar_button.grid(row=4, column=0, columnspan=2, padx=5, pady=10)
+
+        self.label_estado.config(text="")
+        for aristaN in self.aristas:
+                self.canvas.tag_unbind(aristaN.arrow, "<Button-1>")
+        for aristaIn in self.aristasIn:
+                self.canvas.tag_unbind(aristaIn.arrow, "<Button-1>")
+        for aristaOut in self.aristasOut:
+                self.canvas.tag_unbind(aristaOut.arrow, "<Button-1>")
+        self.actualizando_arista = False
+
     def initModel(self):
-        self.controlFigures.validateAllFigures(self.aristas,self.circles)
+        self.controlFigures.validateAllFigures(self.aristasIn, self.aristasOut, self.aristas, self.circles)
         for exception in self.controlFigures.exceptions:
             print(exception.message)
+        if not self.controlFigures.exceptions:                        
+            isValidate = self.validateInformation()
+            if isValidate:
+                model = Model(self.population_size,self.mutation_rate,self.value_generation_or_efficiency,self.generation_or_efficiency,self.circles,self.aristasIn)
+
+    def saveDataFromModel(self):
+        self.formInitModel()
+    
+    def validateInformation(self):
+        if self.population_size != 0 and self.mutation_rate != 0 and self.value_generation_or_efficiency != 0:
+            return True
+        return False
+
 
     def iniciar(self):
         menu_bar = tk.Menu(self.root)
@@ -259,7 +335,8 @@ class Interfaz:
         menu_bar.add_cascade(label="Aristas", menu=aristas_menu)
 
         nodos_menu = tk.Menu(menu_bar, tearoff=0)
-        nodos_menu.add_command(label="Iniciar Modelo", command=self.initModel)        
+        nodos_menu.add_command(label="Ingresar Datos", command=self.saveDataFromModel)
+        nodos_menu.add_command(label="Iniciar Modelo", command=self.initModel)
         menu_bar.add_cascade(label="Modelo", menu=nodos_menu)
 
         self.root.config(menu=menu_bar)

@@ -9,7 +9,7 @@ class Circle:
         self.aristasOut = []
         self.aristasIn = []
         self.name = name
-        self.name_text = self.canvas.create_text(self.x, self.y, text=self.name, fill="black")
+        self.name_text = self.canvas.create_text(self.x, self.y, text=self.name, fill="black")        
         
 
     def toggle_selection(self, event, selected_circles, creando_arista, borrando_arista):
@@ -48,3 +48,5 @@ class Circle:
             arista.actualizar()
         for arista in self.aristasIn:
             arista.actualizar()
+    
+    

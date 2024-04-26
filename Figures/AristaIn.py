@@ -5,7 +5,7 @@ class AristaIn:
     def __init__(self, canvas, circle1, color="black"):
         self.canvas = canvas
         self.circle2 = circle1        
-        self.circle1 = Circle(self.canvas, circle1.x - 50, circle1.y, "blue")
+        self.circle1 = Circle(self.canvas, circle1.x - 50, circle1.y, "blue","Entrada")
         self.canvas.tag_bind(self.circle2.shape, "<B1-Motion>", lambda event, circle=self.circle2: circle.move(event))
         self.capacity = 0
         self.percentage = 0 # min percentage of usage
@@ -15,6 +15,8 @@ class AristaIn:
         self.capacity_text = self.canvas.create_text((self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2, text=f"Capacidad: {self.capacity}", fill=color)
         self.percentage_text = self.canvas.create_text((self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2 + 15, text=f"Porcentaje: {self.percentage}%", fill=color)
         self.calculate_arrow_coordinates()
+        self.percentages = set()
+        self.amounts_of_cars = set()
 
     def actualizar(self):
         self.calculate_arrow_coordinates()
@@ -42,4 +44,14 @@ class AristaIn:
         self.percentage = int(percentage)
         self.canvas.itemconfig(self.capacity_text, text=f"Capacidad: {self.capacity}")
         self.canvas.itemconfig(self.percentage_text, text=f"Porcentaje: {self.percentage}%")
+    
+    def addNewPercentage(self,newPercentage):
+        self.percentages.add(newPercentage)
+    
+    def addNewAmountOfCars(self,amount_of_cars):
+        self.amounts_of_cars.add(amount_of_cars)
+
+    def cleanArista(self):
+        self.percentages = set()
+        self.amounts_of_cars = set()
     
