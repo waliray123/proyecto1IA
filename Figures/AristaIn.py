@@ -15,8 +15,8 @@ class AristaIn:
         self.capacity_text = self.canvas.create_text((self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2, text=f"Capacidad: {self.capacity}", fill=color)
         self.percentage_text = self.canvas.create_text((self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2 + 15, text=f"Porcentaje: {self.percentage}%", fill=color)
         self.calculate_arrow_coordinates()
-        self.percentages = set()
-        self.amounts_of_cars = set()
+        self.percentages = []
+        self.amounts_of_cars = []
 
     def actualizar(self):
         self.calculate_arrow_coordinates()
@@ -46,12 +46,12 @@ class AristaIn:
         self.canvas.itemconfig(self.percentage_text, text=f"Porcentaje: {self.percentage}%")
     
     def addNewPercentage(self,newPercentage):
-        self.percentages.add(newPercentage)
+        self.percentages.append(newPercentage)
     
     def addNewAmountOfCars(self,amount_of_cars):
-        self.amounts_of_cars.add(amount_of_cars)
+        self.amounts_of_cars.append(amount_of_cars)
 
     def cleanArista(self):
-        self.percentages = set()
-        self.amounts_of_cars = set()
+        self.percentages = []
+        self.amounts_of_cars = []
     

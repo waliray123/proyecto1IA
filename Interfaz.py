@@ -307,7 +307,7 @@ class Interfaz:
         if not self.controlFigures.exceptions:                        
             isValidate = self.validateInformation()
             if isValidate:
-                model = Model(self.population_size,self.mutation_rate,self.value_generation_or_efficiency,self.generation_or_efficiency,self.circles,self.aristasIn)
+                model = Model(self.population_size,self.mutation_rate,self.value_generation_or_efficiency,self.generation_or_efficiency,self.circles,self.aristasIn,self.aristasOut)
 
     def saveDataFromModel(self):
         self.formInitModel()
