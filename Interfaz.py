@@ -1,20 +1,32 @@
+import threading
 import tkinter as tk
-from tkinter import messagebox
-from tkinter import simpledialog
+
 
 from Figures.Arista import Arista
 from Figures.AristaOutput import AristaOutput
 from Figures.AristaIn import AristaIn
 from Figures.Circle import Circle
 from Controllers.controlFigures import ControlFigures
-from Model.Model import Model
+from Model.ControlModel import ControlModel
 
 class Interfaz:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Aplicación")
         self.canvas = tk.Canvas(self.root, width=1400, height=600, bg="white")
-        self.canvas.pack()        
+        self.canvas.grid(row=0, column=0, columnspan=4)  # Ajusta la posición según tu diseño
+
+        self.label_estado = tk.Label(self.root, text="")
+        self.label_estado.grid(row=1, column=0, columnspan=4)  # Ajusta la posición según tu diseño
+
+        self.boton_terminar_arista = tk.Button(self.root, text="Terminar Arista", command=self.crear_arista)
+        self.boton_terminar_arista.grid(row=2, column=0, columnspan=4)  # Ajusta la posición según tu diseño
+        self.boton_terminar_arista.grid_remove()
+
+        self.boton_parar_modelo = tk.Button(self.root, text="Parar Modelo", command=self.stopModel)
+        self.boton_parar_modelo.grid(row=3, column=1, columnspan=4)  # Ajusta la posición según tu diseño
+        #self.boton_parar_modelo.grid_remove()
+
         self.circles = []
         self.aristas = []
         self.aristasIn = []
@@ -26,10 +38,7 @@ class Interfaz:
         self.actualizando_arista = False
         self.creando_arista_salida = False
         self.creando_arista_entrada = False
-        self.label_estado = tk.Label(self.root, text="")
-        self.label_estado.pack()
-        self.boton_terminar_arista = tk.Button(self.root, text="Terminar Arista", command=self.crear_arista)
-        self.boton_terminar_arista.pack_forget()
+
         self.controlFigures = ControlFigures()
         self.nameNode = 0    
         self.population_size = 0
@@ -37,16 +46,43 @@ class Interfaz:
         self.generation_or_efficiency = 0
         self.value_generation_or_efficiency = 0
 
+        self.createConfigLabels()
+    
+    def stopModel(self):
+        self.controlmodel.changeStateModel()
+        self.modelo_thread.join()
+
+    def createConfigLabels(self):
+        self.label_population = tk.Label(self.root, text="Poblacion: ")
+        self.label_population.grid(row=3, column=0, sticky="w")  # Alineado a la izquierda
+
+        self.label_mutation = tk.Label(self.root, text="Tasa de Mutacion: ")
+        self.label_mutation.grid(row=4, column=0, sticky="w")  # Alineado a la izquierda
+
+        self.label_end = tk.Label(self.root, text="Criterio de finalizacion: ")
+        self.label_end.grid(row=5, column=0, sticky="w")  # Alineado a la izquierda
+
+        self.label_end_value = tk.Label(self.root, text="Valor de Criterio de Finalizacion: ")
+        self.label_end_value.grid(row=6, column=0, sticky="w")  # Alineado a la izquierda
+    
+    
+    
+    def updateConfigLabels(self, population, mutation, genOrEff, valueGenOrEff):
+        self.label_population.config(text="Poblacion: " + population)
+        self.label_mutation.config(text="Tasa de Mutacion: " + mutation)
+        self.label_end.config(text="Criterio de finalizacion: " + genOrEff)
+        self.label_end_value.config(text="Valor de Criterio de Finalizacion: " + valueGenOrEff)
+
     def toggle_creacion_arista(self):
         self.creando_arista = not self.creando_arista
         if self.creando_arista:
             self.label_estado.config(text="Modo creación de arista activado. Seleccione dos nodos.")
-            self.boton_terminar_arista.pack()
+            self.boton_terminar_arista.grid()
             for circle in self.circles:
                 self.canvas.tag_bind(circle.shape, "<Button-1>", lambda event, circle=circle: circle.toggle_selection(event, self.selected_circles, self.creando_arista, self.borrando_arista))
         else:
             self.label_estado.config(text="")
-            self.boton_terminar_arista.pack_forget()
+            self.boton_terminar_arista.grid_remove()
             for circle in self.circles:
                 self.canvas.tag_bind(circle.shape, "<Button-1>", lambda event, circle=circle: circle.toggle_selection(event, self.selected_circles, self.creando_arista, self.borrando_arista))
     
@@ -71,7 +107,7 @@ class Interfaz:
             circle.canvas.itemconfig(circle.shape, outline="black", width=1)
         self.creando_arista = False
         self.label_estado.config(text="Creación de arista finalizada.")
-        self.boton_terminar_arista.pack_forget()
+        self.boton_terminar_arista.grid_remove()
 
     def crear_arista_salida(self, circle1):
         arista_salida = AristaOutput(self.canvas, circle1)
@@ -122,14 +158,14 @@ class Interfaz:
     def borrar_arista(self):
         if not self.borrando_arista:
             self.label_estado.config(text="Modo borrado de arista activado. Seleccione una arista para borrar.")
-            self.boton_terminar_arista.pack_forget()
+            self.boton_terminar_arista.grid_remove()
             for circle in self.circles:
                 circle.selected = False
                 circle.canvas.itemconfig(circle.shape, width=1)
             self.borrando_arista = True
         else:
             self.label_estado.config(text="")
-            self.boton_terminar_arista.pack_forget()
+            self.boton_terminar_arista.grid_remove()
             self.borrando_arista = False
 
     def borrar_arista_seleccionada(self, event):
@@ -174,11 +210,11 @@ class Interfaz:
     def toggle_borrado_nodo(self):
         if not self.borrando_nodo:
             self.label_estado.config(text="Modo borrado de nodo activado. Seleccione un nodo para borrar.")
-            self.boton_terminar_arista.pack_forget()
+            self.boton_terminar_arista.grid_remove()
             self.borrando_nodo = True
         else:
             self.label_estado.config(text="")
-            self.boton_terminar_arista.pack_forget()
+            self.boton_terminar_arista.grid_remove()
             self.borrando_nodo = False
 
     def borrar_nodo_seleccionado(self, event):
@@ -286,6 +322,7 @@ class Interfaz:
             self.mutation_rate = int(mutation_entry.get())
             self.generation_or_efficiency = finish_criteria.get()
             self.value_generation_or_efficiency = int(aditional_entry.get())
+            self.updateConfigLabels(population_entry.get(),mutation_entry.get(),finish_criteria.get(),aditional_entry.get())
             formulario.destroy()
     
         actualizar_button = tk.Button(formulario, text="Ingresar", command=insertData)
@@ -307,7 +344,12 @@ class Interfaz:
         if not self.controlFigures.exceptions:                        
             isValidate = self.validateInformation()
             if isValidate:
-                model = Model(self.population_size,self.mutation_rate,self.value_generation_or_efficiency,self.generation_or_efficiency,self.circles,self.aristasIn,self.aristasOut)
+                self.controlmodel = ControlModel(self.circles)
+                self.modelo_thread = threading.Thread(target=self.controlmodel.initModel, args=(self.population_size, self.mutation_rate, self.value_generation_or_efficiency, self.generation_or_efficiency))
+                self.modelo_thread.start()
+    
+    #self.modelo_thread = threading.Thread(target=self.controlmodel.initModel(self.population_size,self.mutation_rate,self.value_generation_or_efficiency,self.generation_or_efficiency))
+                
 
     def saveDataFromModel(self):
         self.formInitModel()

@@ -1,44 +1,32 @@
 import random
-from Figures.AristaIn import AristaIn
-from Figures.AristaOutput import AristaOutput
-from Figures.Arista import Arista
-from Figures.Circle import Circle
-
+from time import sleep
+from Model.AristaNode import AristaNode
+from Model.NodeModel import NodeModel
 
 class Model:
-    def __init__(self, population, mutation, genOrEf, isgenOrEff, circles, aristasIn, aristasOut):
+    def __init__(self, population, mutation, genOrEf, isgenOrEff, circles, aristasIn, aristasOut, controlModel):
         self.population = population
         self.mutation = mutation
         self.isgenOrEff = isgenOrEff
         self.genOrEf = genOrEf        
-        self.circles = circles
+        self.stopModel = False
         self.aristasIn = aristasIn
         self.aristasOut = aristasOut
-        self.stopModel = False
+        self.circles = circles        
         self.generation = 0
         self.aptitudeValues = []
-        self.cleanModel()
-        self.initModel()
+        self.controlModel = controlModel
+    
+    def deactivateControlModel(self):
+        self.controlModel = 0
 
-    
-    def cleanModel(self):
-        for arista in self.aristasIn:
-            if isinstance(arista, AristaIn):
-                arista.cleanArista()
-        for circle in self.circles:
-            if isinstance(circle, Circle):
-                circle.cleanCircle()
-                for aristaOut in circle.aristasOut:
-                    if isinstance(aristaOut, Arista):
-                        aristaOut.cleanArista()
-                    elif isinstance(aristaOut, AristaOutput):
-                        aristaOut.cleanArista()
-        
-    
     def initModel(self):
         if self.stopModel == False:
             self.generateFirstPopulation()
-            self.runCars()
+            self.runCars() # Run cars for the first population
+        while not self.stopModel:
+            self.controlModel.imprimir()
+            sleep(3)
 
     def generateFirstPopulation(self):         
         #ALL Aristas need a new percentage
@@ -51,10 +39,10 @@ class Model:
     def createIndividual(self):
         #This is to create 1 individual
         for arista in self.aristasIn:
-            if isinstance(arista, AristaIn):
+            if isinstance(arista, AristaNode) and arista.typeArista=="in":
                 arista.addNewPercentage(100)
         for circle in self.circles:
-            if isinstance(circle, Circle):
+            if isinstance(circle, NodeModel):
                 aristasQuantity = len(circle.aristasOut)
                 totalPercentage = 0
                 aristasNumber = 0
@@ -62,17 +50,17 @@ class Model:
                     aristasNumber += 1
                     percentageToSet = self.createRandomPercentage(totalPercentage,aristasQuantity,aristasNumber,aristaOut.percentage)
                     totalPercentage += percentageToSet
-                    if isinstance(aristaOut, Arista):
+                    if isinstance(aristaOut, AristaNode) and aristaOut.typeArista == "normal":
                         aristaOut.addNewPercentage(percentageToSet)
-                    elif isinstance(aristaOut, AristaOutput):
+                    elif isinstance(aristaOut, AristaNode) and aristaOut.typeArista == "out":
                         aristaOut.addNewPercentage(percentageToSet)
 
     def runCarsForOneIndividual(self,indexIndividual):
         #Add cars to the circles beetween the aristas that enter cars
         for arista in self.aristasIn:
-            if isinstance(arista, AristaIn):
+            if isinstance(arista, AristaNode) and arista.typeArista == "in":
                 circleAddCars = arista.circle2
-                if isinstance(circleAddCars, Circle):    
+                if isinstance(circleAddCars, NodeModel):    
                     try:                        
                         circleAddCars.amountOfCars[indexIndividual] += (arista.capacity)
                     except IndexError:
@@ -85,42 +73,46 @@ class Model:
                     if not self.reviewNormalAristasInCircle(circle):
                         self.sendCarsToAristasOut(circle,indexIndividual)
                         circlesAlreadySendCars.add(circle)
-                    elif self.reviewAllCirclesBeforeAlreadySendcars(circle):
+                    elif self.reviewAllCirclesBeforeAlreadySendcars(circle,circlesAlreadySendCars,indexIndividual):
                         self.sendCarsToAristasOut(circle,indexIndividual)
-                        circlesAlreadySendCars.add(circle)
+                        circlesAlreadySendCars.add(circle)        
+            
                 
-    def reviewAllCirclesBeforeAlreadySendcars(self,circle,circlesAlreadySendCars):
-        if isinstance(circle, Circle):
+    def reviewAllCirclesBeforeAlreadySendcars(self,circle,circlesAlreadySendCars,indexIndividual):
+        if isinstance(circle, NodeModel):
             if not circle.aristasIn:
                 return True
             else:
+                carsToAdd = 0
                 for arista in circle.aristasIn:
-                    if isinstance(arista, Arista):
+                    if isinstance(arista, AristaNode) and arista.typeArista == "normal":
                         if not (arista.circle1 in circlesAlreadySendCars):
                             return False
+                        carsToAdd += arista.amounts_of_cars[indexIndividual]
+                try:
+                    circle.amountOfCars[indexIndividual] = carsToAdd
+                except IndexError:
+                    circle.addCars(carsToAdd)
                 return True
-                            
 
-    
     def reviewNormalAristasInCircle(self,circle):
-        if isinstance(circle, Circle):
+        if isinstance(circle, NodeModel):
             for arista in circle.aristasIn:
-                if isinstance(arista, Arista):
+                if isinstance(arista, AristaNode) and arista.typeArista == "normal":
                     return True
         return False
 
     def sendCarsToAristasOut(self,circle,indexIndividual):
-        if isinstance(circle, Circle):
-            carsFromTheCar = circle.amountOfCars
-            for arista in circle.aristasOut:
-                if isinstance(arista, Arista) or isinstance(arista, AristaOutput):
-                    self.calculateAndSendCarsToArista(arista, indexIndividual, carsFromTheCar)
+        if isinstance(circle, NodeModel):
+            carsFromTheCircle = circle.amountOfCars[indexIndividual]
+            for arista in circle.aristasOut:                
+                self.calculateAndSendCarsToArista(arista, indexIndividual, carsFromTheCircle)
     
-    def calculateAndSendCarsToArista(arista, indexIndividual, carsFromTheCar):
-        percetageToSend = arista.percentages[indexIndividual]
+    def calculateAndSendCarsToArista(self, arista, indexIndividual, carsFromTheCircle):
+        percetageToSend = int(arista.percentages[indexIndividual])
         capacity = arista.capacity
         # Quit the decimal using int(), round the number using round()
-        carsToSend = round(carsFromTheCar * (percetageToSend / 100))
+        carsToSend = round(carsFromTheCircle * (percetageToSend / 100))
         try:
             carsInArista = arista.amounts_of_cars[indexIndividual]
             carsThatFit = capacity - carsInArista
@@ -163,7 +155,7 @@ class Model:
     def getAmountOfCarsThatExitFromIndividual(self,indexIndividual):
         amountCarsExit = 0
         for aristaOut in self.aristasOut:
-            if isinstance(aristaOut, AristaOutput):
+            if isinstance(aristaOut, AristaNode) and aristaOut.typeArista == "out":
                 try:
                     amountCarsExit += aristaOut.amounts_of_cars[indexIndividual]
                 except IndexError:
@@ -174,11 +166,19 @@ class Model:
     def getAmountOfCarsThatEnter(self):
         amountCarsEnter = 0
         for aristaEnter in self.aristasIn:
-            if isinstance(aristaEnter, AristaIn):
+            if isinstance(aristaEnter, AristaNode) and aristaEnter.typeArista == "in":
                 amountCarsEnter += aristaEnter.capacity
         return amountCarsEnter
 
     
     def changeStateModel(self):
-        self.stopAllModel = not self.stopAllModel
+        self.stopModel = not self.stopModel
+
+    def saveModel(self):
+        print("saveModel")
+        #Traer el ultimo id de modelo
+        #Guardar todos los circulos sin arista
+        #Guardar todas las aristas con su circulos
+        #ID model = autoincrement
+        #ID circle = "model",idModel,"circle",circle.name
     
