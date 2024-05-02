@@ -72,6 +72,7 @@ class Interfaz:
         self.button_validate_num_generation.grid(row=6, column=1, sticky="e")
 
     def validate_num_generation(self):
+        self.createNewCanvasModelGeneration(self.modelo_cargado,int(self.entry_num_generation.get()))
         print("validate num generation")
     
     def updateInterfaceToInitModel(self,generationnum,bestefficiency,quantitymutations):
@@ -426,15 +427,17 @@ class Interfaz:
                             aristasCreated.append(aristaOut)
 
     
-    def crear_arista_cargado(self,arista,generation):
-        arista = None
-        if arista.typeArista == "in":
-            arista = self.create_arista_in_cargado(arista,generation)
-        elif arista.typeArista == "out":
-            arista = self.create_arista_out_cargado(arista,generation)
-        elif arista.typeArista == "normal": 
-            arista = self.create_arista_normal_cargado(arista,generation)
-        arista.setNewProperties2(arista.capacity,arista) #TODO:AAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    def crear_arista_cargado(self,aristaNode,generation):
+        if aristaNode.typeArista == "in":
+            arista = self.create_arista_in_cargado(aristaNode,generation)
+            arista.setNewProperties2(aristaNode.capacity,aristaNode.percentages[generation],aristaNode.capacity)
+        elif aristaNode.typeArista == "out":
+            arista = self.create_arista_out_cargado(aristaNode,generation)
+            arista.setNewProperties2(aristaNode.capacity,aristaNode.percentages[generation],aristaNode.amounts_of_cars[generation])
+        elif aristaNode.typeArista == "normal": 
+            arista = self.create_arista_normal_cargado(aristaNode,generation)
+            arista.setNewProperties2(aristaNode.capacity,aristaNode.percentages[generation],aristaNode.amounts_of_cars[generation])
+        
     
     def create_arista_normal_cargado(self,aristanormal,generation):
         circle1 = self.find_circle_by_name(aristanormal.circle1.name)

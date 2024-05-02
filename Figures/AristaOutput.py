@@ -54,7 +54,7 @@ class AristaOutput:
         self.enviados = int(enviados)
         self.canvas.itemconfig(self.capacity_text, text=f"Capacidad: {self.capacity}")
         self.canvas.itemconfig(self.percentage_text, text=f"Porcentaje: {self.percentage}%")
-        self.canvas.itemconfig(self.enviados_text, text=f"Porcentaje: {self.enviados}%")
+        self.canvas.itemconfig(self.enviados_text, text=f"Enviados: {self.enviados}")
     
     def addNewPercentage(self,newPercentage):
         self.percentages.append(newPercentage)
