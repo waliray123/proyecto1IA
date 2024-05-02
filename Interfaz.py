@@ -79,6 +79,11 @@ class Interfaz:
         self.label_generation.config(text="Genaracion No. " + str(generationnum))        
         self.label_best_aptitude.config(text="Mejor Eficiencia: " + str(bestefficiency))
         self.label_quantity_mutations.config(text="Mutaciones: " + str(quantitymutations))
+    
+    def updateInterfaceModelLoad(self,generationnum,bestefficiency,quantitymutations):
+        self.label_generation.config(text="Genaracion No. " + str(generationnum))        
+        self.label_best_aptitude.config(text="Eficiencia: " + str(bestefficiency))
+        self.label_quantity_mutations.config(text=" ")
 
     
     def stopModel(self):
@@ -425,6 +430,7 @@ class Interfaz:
                         if not aristaOut in aristasCreated:
                             self.crear_arista_cargado(aristaOut,generation)
                             aristasCreated.append(aristaOut)
+            self.updateInterfaceModelLoad(generation,model.getEfficiencyForOneGeneration(generation),"")
 
     
     def crear_arista_cargado(self,aristaNode,generation):

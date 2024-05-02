@@ -265,6 +265,12 @@ class Model:
                 print("Found solution with individual: ", i)
                 self.indexFoundSolution = i
                 break
+    
+    def getEfficiencyForOneGeneration(self,generation):
+        amountCarsEnter = self.getAmountOfCarsThatEnter()
+        aptitudeValue = self.getAptitudeValueForIndividual(generation)
+        efficiencyIndividual = (aptitudeValue/amountCarsEnter) * 100
+        return efficiencyIndividual
 
 
     def createRandomPercentage(self,totalPercentage,aristasQuantity,aristasNumber,minPercentage):
