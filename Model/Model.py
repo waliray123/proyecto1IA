@@ -224,7 +224,7 @@ class Model:
     def sendCarsToAristasOut(self,circle,indexIndividual):
         if isinstance(circle, NodeModel):
             carsFromTheCircle = circle.amountOfCars[indexIndividual]
-            for arista in circle.aristasOut:                
+            for arista in circle.aristasOut:
                 self.calculateAndSendCarsToArista(arista, indexIndividual, carsFromTheCircle)
     
     def calculateAndSendCarsToArista(self, arista, indexIndividual, carsFromTheCircle):
@@ -236,11 +236,13 @@ class Model:
             carsInArista = arista.amounts_of_cars[indexIndividual]
             carsThatFit = capacity - carsInArista
             if carsThatFit > 0 and not (carsThatFit >= carsToSend):
-                carsToSend = abs(carsThatFit - carsToSend)
+                carsToQuit = carsThatFit - carsToSend
+                carsToSend = abs(carsToSend + carsToQuit)
             arista.amounts_of_cars[indexIndividual] += carsToSend
         except IndexError:
             if not (capacity >= carsToSend):
-                carsToSend = abs(capacity - carsToSend)
+                carsToQuit = capacity - carsToSend
+                carsToSend = abs(carsToSend + carsToQuit)
             arista.addNewAmountOfCars(carsToSend)
             
     def runCars(self):   
