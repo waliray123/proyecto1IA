@@ -6,7 +6,7 @@ from Model.NodeModel import NodeModel
 class Model:
     def __init__(self, population, mutation, genOrEf, isgenOrEff, circles, aristasIn, aristasOut, controlModel):
         self.population = population
-        self.mutation = mutation
+        self.mutation = mutation #Rate mutation came as double like, 25.0 That means 25%, or 1.15 that means 1.15%
         self.isgenOrEff = isgenOrEff
         self.genOrEf = genOrEf        
         self.stopModel = False
@@ -16,17 +16,130 @@ class Model:
         self.generation = 0
         self.aptitudeValues = []
         self.controlModel = controlModel
+        self.efficiency = 0
+        self.genes = []
+        self.indexFoundSolution = -1
+        self.quantityMutations = 0
     
     def deactivateControlModel(self):
         self.controlModel = 0
+    
+    def updateInterfaceToInitModel(self):
+        self.controlModel.updateInterfaceToInitModel(self.generation,self.efficiency,self.quantityMutations)
 
     def initModel(self):
-        if self.stopModel == False:
+        if not self.stopModel:
             self.generateFirstPopulation()
             self.runCars() # Run cars for the first population
-        while not self.stopModel:
-            self.controlModel.imprimir()
-            sleep(3)
+        if self.isgenOrEff == "Numero de generaciones" and self.indexFoundSolution == -1:
+            print("Por numero de generaciones")
+            for gen in range(self.genOrEf):
+                if not self.stopModel:
+                    self.createNewPopulation()
+                    self.generation += 1
+                    self.exchangeMutation()
+                    self.runCars()
+                    self.updateInterfaceToInitModel()
+                    if self.indexFoundSolution != -1:
+                        break
+                else:                    
+                    break
+        elif self.isgenOrEff == "Porcentaje de eficiencia" and self.indexFoundSolution == -1:
+            while self.efficiency >= self.genOrEf:
+                if not self.stopModel:
+                    self.createNewPopulation()
+                    self.generation += 1
+                    self.exchangeMutation()
+                    self.runCars()
+                    self.updateInterfaceToInitModel()
+                    if self.indexFoundSolution != -1:
+                        break
+                else:
+                    break 
+                
+            print("Por porcentaje")
+    
+    def createNewPopulation(self):
+        parents = self.selectParents()
+        self.mergeParentsByPoint(parents)
+
+    
+    def mergeParentsByPoint(self,parents):        
+        for i in range(0, len(parents), 2):
+            parent1 = parents[i]
+            parent2 = parents[i + 1]
+
+            pointToMerge = random.randrange(0,len(self.genes))
+            indexToAdd = (self.population * (self.generation+1)) + i 
+
+            #Add and merge the genes of the parents
+            actualPoint = 0
+            for gene in self.genes:
+                if isinstance(gene, AristaNode):
+                    percentageParent1 = gene.percentages[parent1]
+                    percentageParent2 = gene.percentages[parent2]
+                    if pointToMerge <= actualPoint:
+                        gene.addNewPercentage(percentageParent1)
+                        gene.addNewPercentage(percentageParent2)
+                    else:
+                        gene.addNewPercentage(percentageParent2)
+                        gene.addNewPercentage(percentageParent1)
+    
+        
+    
+    def selectParents(self):
+        firstIndexPopulation = (int(self.population) * (self.generation)) 
+        lastIndexPopulation = (int(self.population) * (self.generation + 1)) - 1 
+
+        #Total aptitude
+        totalAptitude = self.getTotalAptitude(firstIndexPopulation,lastIndexPopulation)
+
+        #Parents
+        selectedParents = []
+
+        for i in range(self.population):
+            sumValue = 0
+            #Generate the random number from 0 to totalAptitude
+            randomValue = random.randrange(0, totalAptitude)
+            for indexAptitudeValue in range(firstIndexPopulation, lastIndexPopulation):
+                sumValue += self.aptitudeValues[indexAptitudeValue]
+                if(sumValue >= randomValue):
+                    selectedParents.append(indexAptitudeValue)
+                    break
+
+        #Quantity of parents = total population
+        return selectedParents
+    
+    def getTotalAptitude(self,firstIndexPopulation,lastIndexPopulation):
+        totalAptitude = 0
+        for indexAptitudeValue in range(firstIndexPopulation, lastIndexPopulation):
+            totalAptitude += self.aptitudeValues[indexAptitudeValue]
+        
+        return totalAptitude
+
+    def exchangeMutation(self):
+        #Create the random value of the parcentage to create the mutation
+        percentageRandom = round(random.uniform(0, 100), 2)
+
+        if(percentageRandom <= self.mutation):
+            self.quantityMutations += 1
+            firstIndexPopulation = (int(self.population) * (self.generation)) 
+            lastIndexPopulation = (int(self.population) * (self.generation + 1)) - 1 
+            randIndexIndividual = random.randrange(firstIndexPopulation,lastIndexPopulation)
+            self.mutateIndividual(randIndexIndividual)
+    
+    def mutateIndividual(self,indexIndividualToMutate):
+        randgen1 = random.randrange(0,len(self.genes))
+        randgen2 = random.randrange(0,len(self.genes))
+        aristagen1 = self.genes[randgen1]
+        aristagen2 = self.genes[randgen2]
+        valuegen1 = aristagen1.amounts_of_cars[indexIndividualToMutate]
+        valuegen2 = aristagen2.amounts_of_cars[indexIndividualToMutate]
+        aristagen1.amounts_of_cars[indexIndividualToMutate] = valuegen2
+        aristagen2.amounts_of_cars[indexIndividualToMutate] = valuegen1
+                
+
+                
 
     def generateFirstPopulation(self):         
         #ALL Aristas need a new percentage
@@ -52,8 +165,14 @@ class Model:
                     totalPercentage += percentageToSet
                     if isinstance(aristaOut, AristaNode) and aristaOut.typeArista == "normal":
                         aristaOut.addNewPercentage(percentageToSet)
+                        self.addToGenes(aristaOut)
                     elif isinstance(aristaOut, AristaNode) and aristaOut.typeArista == "out":
                         aristaOut.addNewPercentage(percentageToSet)
+                        self.addToGenes(aristaOut)
+    
+    def addToGenes(self,arista):
+        if not arista in self.genes:
+            self.genes.append(arista)
 
     def runCarsForOneIndividual(self,indexIndividual):
         #Add cars to the circles beetween the aristas that enter cars
@@ -124,14 +243,25 @@ class Model:
                 carsToSend = abs(capacity - carsToSend)
             arista.addNewAmountOfCars(carsToSend)
             
-    def runCars(self):        
+    def runCars(self):   
         #Run the cars by the percentage and capacity of the aristas
         amountCarsEnter = self.getAmountOfCarsThatEnter()
-        for i in range(self.population):
+        for i in range(self.population * self.generation, self.population * (self.generation + 1) ):
             self.runCarsForOneIndividual(i)
-            aptitudeValue = self.getAptitudeValueForIndividual(i,amountCarsEnter)
-            if(aptitudeValue == 0):
+            aptitudeValue = self.getAptitudeValueForIndividual(i)
+            self.aptitudeValues.append(aptitudeValue)
+            #Set the performance
+            if(amountCarsEnter > 0):
+                efficiencyIndividual = (aptitudeValue/amountCarsEnter) * 100
+            else: 
+                efficiencyIndividual = 100
+            
+            if(efficiencyIndividual > self.efficiency):
+                self.efficiency = efficiencyIndividual
+
+            if(aptitudeValue == amountCarsEnter):
                 print("Found solution with individual: ", i)
+                self.indexFoundSolution = i
                 break
 
 
@@ -143,13 +273,14 @@ class Model:
         randomNumber = random.randint(minPercentage, 100-totalPercentage)
         return randomNumber
 
-    def getAptitudeValueForIndividual(self,indexIndividual,amountCarsEnter):
+    def getAptitudeValueForIndividual(self,indexIndividual):
         #Get amount of cars that exit
         amountCarsExit = self.getAmountOfCarsThatExitFromIndividual(indexIndividual)
         #Get amount of cars that enter = amountCarsEnter
         #Compare and that is the aptitude function
-        aptitudeValue = amountCarsEnter - amountCarsExit
-        #If the aptitude value is 0 the individual is ready
+        #aptitudeValue = amountCarsEnter - amountCarsExit
+        aptitudeValue = amountCarsExit
+        #If the aptitude value is = amountCarsEnter the individual is ready
         return aptitudeValue
 
     def getAmountOfCarsThatExitFromIndividual(self,indexIndividual):
@@ -174,11 +305,4 @@ class Model:
     def changeStateModel(self):
         self.stopModel = not self.stopModel
 
-    def saveModel(self):
-        print("saveModel")
-        #Traer el ultimo id de modelo
-        #Guardar todos los circulos sin arista
-        #Guardar todas las aristas con su circulos
-        #ID model = autoincrement
-        #ID circle = "model",idModel,"circle",circle.name
     

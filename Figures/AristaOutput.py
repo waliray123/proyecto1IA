@@ -14,6 +14,8 @@ class AristaOutput:
         self.arrow = self.canvas.create_line(self.start_x, self.start_y, self.end_x, self.end_y, arrow=tk.LAST, fill=color)
         self.capacity_text = self.canvas.create_text((self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2, text=f"Capacidad: {self.capacity}", fill=color)
         self.percentage_text = self.canvas.create_text((self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2 + 15, text=f"Porcentaje: {self.percentage}%", fill=color)
+        self.enviados = 0
+        self.enviados_text = self.canvas.create_text((self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2 + 30, text=f"Enviados: {self.enviados}%", fill=color)
         self.calculate_arrow_coordinates()
         self.percentages = []
         self.amounts_of_cars = []
@@ -22,7 +24,8 @@ class AristaOutput:
         self.calculate_arrow_coordinates()
         self.canvas.coords(self.arrow, self.start_x, self.start_y, self.end_x, self.end_y)
         self.canvas.coords(self.capacity_text, (self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2)
-        self.canvas.coords(self.percentage_text, (self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2 + 15)        
+        self.canvas.coords(self.percentage_text, (self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2 + 15)
+        self.canvas.coords(self.enviados_text, (self.start_x + self.end_x) / 2, (self.start_y + self.end_y) / 2 + 30)
 
     def calculate_arrow_coordinates(self):
         x1, y1 = self.circle1.x, self.circle1.y
@@ -44,6 +47,14 @@ class AristaOutput:
         self.percentage = int(percentage)       
         self.canvas.itemconfig(self.capacity_text, text=f"Capacidad: {self.capacity}")
         self.canvas.itemconfig(self.percentage_text, text=f"Porcentaje: {self.percentage}%")
+
+    def setNewProperties2(self,capacity,percentage,enviados):
+        self.capacity = int(capacity)
+        self.percentage = int(percentage)
+        self.enviados = int(enviados)
+        self.canvas.itemconfig(self.capacity_text, text=f"Capacidad: {self.capacity}")
+        self.canvas.itemconfig(self.percentage_text, text=f"Porcentaje: {self.percentage}%")
+        self.canvas.itemconfig(self.enviados_text, text=f"Porcentaje: {self.enviados}%")
     
     def addNewPercentage(self,newPercentage):
         self.percentages.append(newPercentage)

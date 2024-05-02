@@ -1,5 +1,7 @@
+import pickle
 import threading
 import tkinter as tk
+from tkinter import filedialog
 
 
 from Figures.Arista import Arista
@@ -7,7 +9,10 @@ from Figures.AristaOutput import AristaOutput
 from Figures.AristaIn import AristaIn
 from Figures.Circle import Circle
 from Controllers.controlFigures import ControlFigures
+from Model.AristaNode import AristaNode
 from Model.ControlModel import ControlModel
+from Model.Model import Model
+from Model.NodeModel import NodeModel
 
 class Interfaz:
     def __init__(self):
@@ -23,10 +28,14 @@ class Interfaz:
         self.boton_terminar_arista.grid(row=2, column=0, columnspan=4)  # Ajusta la posición según tu diseño
         self.boton_terminar_arista.grid_remove()
 
-        self.boton_parar_modelo = tk.Button(self.root, text="Parar Modelo", command=self.stopModel)
-        self.boton_parar_modelo.grid(row=3, column=1, columnspan=4)  # Ajusta la posición según tu diseño
+        self.createInterfaceToInitModel()
         #self.boton_parar_modelo.grid_remove()
 
+        self.initValues()
+
+        self.createConfigLabels()
+    
+    def initValues(self):
         self.circles = []
         self.aristas = []
         self.aristasIn = []
@@ -45,8 +54,31 @@ class Interfaz:
         self.mutation_rate = 0
         self.generation_or_efficiency = 0
         self.value_generation_or_efficiency = 0
+    
+    def createInterfaceToInitModel(self):
+        self.boton_parar_modelo = tk.Button(self.root, text="Parar Modelo", command=self.stopModel)
+        self.boton_parar_modelo.grid(row=3, column=1, columnspan=4)
+        self.label_generation = tk.Label(self.root, text="Genaracion No. ")
+        self.label_generation.grid(row=3, column=1, sticky="w")
+        self.label_best_aptitude = tk.Label(self.root, text="Mejor Eficiencia: ")
+        self.label_best_aptitude.grid(row=4, column=1, sticky="w")
+        self.label_quantity_mutations = tk.Label(self.root, text="Mutaciones: ")
+        self.label_quantity_mutations.grid(row=5, column=1, sticky="w")
+        self.label_quantity_mutations = tk.Label(self.root, text="Seleccion Generacion: ")
+        self.label_quantity_mutations.grid(row=6, column=1, sticky="w")
+        self.entry_num_generation = tk.Entry(self.root)
+        self.entry_num_generation.grid(row=6, column=1, sticky="s")
+        self.button_validate_num_generation = tk.Button(self.root, text="Cargar", command=self.validate_num_generation)
+        self.button_validate_num_generation.grid(row=6, column=1, sticky="e")
 
-        self.createConfigLabels()
+    def validate_num_generation(self):
+        print("validate num generation")
+    
+    def updateInterfaceToInitModel(self,generationnum,bestefficiency,quantitymutations):
+        self.label_generation.config(text="Genaracion No. " + str(generationnum))        
+        self.label_best_aptitude.config(text="Mejor Eficiencia: " + str(bestefficiency))
+        self.label_quantity_mutations.config(text="Mutaciones: " + str(quantitymutations))
+
     
     def stopModel(self):
         self.controlmodel.changeStateModel()
@@ -64,7 +96,6 @@ class Interfaz:
 
         self.label_end_value = tk.Label(self.root, text="Valor de Criterio de Finalizacion: ")
         self.label_end_value.grid(row=6, column=0, sticky="w")  # Alineado a la izquierda
-    
     
     
     def updateConfigLabels(self, population, mutation, genOrEff, valueGenOrEff):
@@ -344,11 +375,13 @@ class Interfaz:
         if not self.controlFigures.exceptions:                        
             isValidate = self.validateInformation()
             if isValidate:
-                self.controlmodel = ControlModel(self.circles)
+                self.controlmodel = ControlModel(self.circles,self)
                 self.modelo_thread = threading.Thread(target=self.controlmodel.initModel, args=(self.population_size, self.mutation_rate, self.value_generation_or_efficiency, self.generation_or_efficiency))
                 self.modelo_thread.start()
     
-    #self.modelo_thread = threading.Thread(target=self.controlmodel.initModel(self.population_size,self.mutation_rate,self.value_generation_or_efficiency,self.generation_or_efficiency))
+    def cleanCanvas(self):
+        self.canvas.delete("all")
+        self.initValues()
                 
 
     def saveDataFromModel(self):
@@ -358,6 +391,100 @@ class Interfaz:
         if self.population_size != 0 and self.mutation_rate != 0 and self.value_generation_or_efficiency != 0:
             return True
         return False
+    
+    def loadModel(self, filename):
+        try:
+            with open(filename, 'rb') as f:
+                self.modelo_cargado = pickle.load(f)
+                if isinstance(self.modelo_cargado, Model):
+                    self.updateInterfaceToInitModel(self.modelo_cargado.generation,self.modelo_cargado.efficiency,self.modelo_cargado.quantityMutations)
+                    self.createNewCanvasModelGeneration(self.modelo_cargado,0)
+                print("Modelo cargado correctamente.")
+        except FileNotFoundError:
+            print("El archivo especificado no se encuentra.")
+        except Exception as e:
+            print("Error al cargar el modelo:", e)    
+    
+    
+    def createNewCanvasModelGeneration(self,model,generation):        
+        if isinstance(model,Model):
+            self.cleanCanvas()
+            #Create all Circles
+            for node in model.circles:
+                if isinstance(node,NodeModel):
+                    self.crear_nodo_cargado(node)
+            #Already created all circles
+            aristasCreated = []
+            for node in model.circles:
+                for aristaIn in node.aristasIn:
+                        if not aristaIn in aristasCreated:
+                            self.crear_arista_cargado(aristaIn,generation)
+                            aristasCreated.append(aristaIn)
+                for aristaOut in node.aristasOut:
+                        if not aristaOut in aristasCreated:
+                            self.crear_arista_cargado(aristaOut,generation)
+                            aristasCreated.append(aristaOut)
+
+    
+    def crear_arista_cargado(self,arista,generation):
+        arista = None
+        if arista.typeArista == "in":
+            arista = self.create_arista_in_cargado(arista,generation)
+        elif arista.typeArista == "out":
+            arista = self.create_arista_out_cargado(arista,generation)
+        elif arista.typeArista == "normal": 
+            arista = self.create_arista_normal_cargado(arista,generation)
+        arista.setNewProperties2(arista.capacity,arista) #TODO:AAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    
+    def create_arista_normal_cargado(self,aristanormal,generation):
+        circle1 = self.find_circle_by_name(aristanormal.circle1.name)
+        circle2 = self.find_circle_by_name(aristanormal.circle2.name)
+        arista = Arista(self.canvas, circle1, circle2)
+        self.aristas.append(arista)
+        circle1.aristasOut.append(arista)
+        circle2.aristasIn.append(arista)
+        return arista
+
+    def create_arista_in_cargado(self,aristain,generation):
+        circle2 = self.find_circle_by_name(aristain.circle2.name)
+        arista_entrada = AristaIn(self.canvas, circle2)
+        self.aristasIn.append(arista_entrada)
+        circle2.aristasIn.append(arista_entrada)
+        arista_entrada.circle1.aristasOut.append(arista_entrada)
+        self.canvas.tag_bind(arista_entrada.circle1.shape, "<B1-Motion>", lambda event, circle=arista_entrada.circle1: circle.move(event))
+        return arista_entrada
+
+    def create_arista_out_cargado(self,aristaout,generation):
+        circle1 = self.find_circle_by_name(aristaout.circle1.name)
+        arista_salida = AristaOutput(self.canvas, circle1)
+        self.aristasOut.append(arista_salida)
+        circle1.aristasOut.append(arista_salida)
+        arista_salida.circle2.aristasIn.append(arista_salida)
+        self.canvas.tag_bind(arista_salida.circle2.shape, "<B1-Motion>", lambda event, circle=arista_salida.circle2: circle.move(event))
+        return arista_salida
+
+    
+    def find_circle_by_name(self,name):
+        for circle in self.circles:
+            if circle.name == name:
+                return circle
+        return None
+        
+    
+    def crear_nodo_cargado(self,node):
+        if isinstance(node,NodeModel):
+            self.nameNode += 1
+            circle = Circle(self.canvas, node.x, node.y, "white",str(node.name))
+            self.circles.append(circle)
+            self.canvas.tag_bind(circle.shape, "<Button-1>", lambda event, circle=circle: circle.toggle_selection(event, self.selected_circles, self.creando_arista, self.borrando_arista))
+            self.canvas.tag_bind(circle.shape, "<B1-Motion>", lambda event, circle=circle: circle.move(event))
+            self.canvas.tag_bind(circle.shape, "<Button-1>", lambda event: self.borrar_nodo_seleccionado(event))
+                
+    
+    def createDialogLoadModel(self):
+        filename = filedialog.askopenfilename(filetypes=[("Model Files", "*.mdl")])
+        if filename:
+            self.loadModel(filename)
 
 
     def iniciar(self):
@@ -376,10 +503,15 @@ class Interfaz:
         aristas_menu.add_command(label="Actualizar Arista", command=self.toggle_actualizando_arista)
         menu_bar.add_cascade(label="Aristas", menu=aristas_menu)
 
-        nodos_menu = tk.Menu(menu_bar, tearoff=0)
-        nodos_menu.add_command(label="Ingresar Datos", command=self.saveDataFromModel)
-        nodos_menu.add_command(label="Iniciar Modelo", command=self.initModel)
-        menu_bar.add_cascade(label="Modelo", menu=nodos_menu)
+        model_menu = tk.Menu(menu_bar, tearoff=0)
+        model_menu.add_command(label="Ingresar Datos", command=self.saveDataFromModel)
+        model_menu.add_command(label="Iniciar Modelo", command=self.initModel)
+        model_menu.add_command(label="Cargar Modelo", command=self.createDialogLoadModel)
+        menu_bar.add_cascade(label="Modelo", menu=model_menu)
+
+        canvas_menu = tk.Menu(menu_bar, tearoff=0)
+        canvas_menu.add_command(label="Limpiar Canvas", command=self.cleanCanvas)
+        menu_bar.add_cascade(label="Tablero", menu=canvas_menu)
 
         self.root.config(menu=menu_bar)
 

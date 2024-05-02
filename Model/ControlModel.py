@@ -11,11 +11,12 @@ from Model.NodeModel import NodeModel
 
 
 class ControlModel:
-    def __init__(self, circles):
+    def __init__(self, circles,interfaz):
         self.aristasIn = []
         self.aristasOut = []
         self.circles = []
         self.createNodesAndAristas(circles)
+        self.interfaz = interfaz
         print("terminados")
     
     def createNodesAndAristas(self,circles):
@@ -122,6 +123,9 @@ class ControlModel:
             pickle.dump(model, archivo)
         
         print("Objeto guardado correctamente en", ruta_archivo)
+    
+    def updateInterfaceToInitModel(self,generationnum,bestefficiency,quantitymutations):
+        self.interfaz.updateInterfaceToInitModel(generationnum,bestefficiency,quantitymutations)
         
     
 
