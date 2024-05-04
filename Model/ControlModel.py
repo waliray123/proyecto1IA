@@ -125,7 +125,7 @@ class ControlModel:
         print("Objeto guardado correctamente en", ruta_archivo)
     
     def updateInterfaceToInitModel(self,generationnum,bestefficiency,quantitymutations):
-        self.interfaz.updateInterfaceToInitModel(generationnum,bestefficiency,quantitymutations)
+        self.interfaz.updateInterfaceToInitModel(generationnum,bestefficiency,quantitymutations,"Modelo")
         
     
 

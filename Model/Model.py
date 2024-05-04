@@ -26,6 +26,7 @@ class Model:
     
     def updateInterfaceToInitModel(self):
         self.controlModel.updateInterfaceToInitModel(self.generation,self.efficiency,self.quantityMutations)
+        
 
     def initModel(self):
         if not self.stopModel:

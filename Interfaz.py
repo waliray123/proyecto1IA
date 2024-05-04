@@ -1,7 +1,9 @@
+import os
 import pickle
 import threading
 import tkinter as tk
 from tkinter import filedialog
+import matplotlib.pyplot as plt
 
 
 from Figures.Arista import Arista
@@ -58,15 +60,17 @@ class Interfaz:
     def createInterfaceToInitModel(self):
         self.boton_parar_modelo = tk.Button(self.root, text="Parar Modelo", command=self.stopModel)
         self.boton_parar_modelo.grid(row=3, column=1, columnspan=4)
-        self.label_generation = tk.Label(self.root, text="Genaracion No. ")
+        self.label_generation = tk.Label(self.root, text="Hijo No. ")
         self.label_generation.grid(row=3, column=1, sticky="w")
+        self.label_model_load = tk.Label(self.root, text="Modelo: ")
+        self.label_model_load.grid(row=3, column=1, sticky="e")
         self.label_best_aptitude = tk.Label(self.root, text="Mejor Eficiencia: ")
         self.label_best_aptitude.grid(row=4, column=1, sticky="w")
         self.label_quantity_mutations = tk.Label(self.root, text="Mutaciones: ")
         self.label_quantity_mutations.grid(row=5, column=1, sticky="w")
-        self.label_quantity_mutations = tk.Label(self.root, text="Seleccion Generacion: ")
-        self.label_quantity_mutations.grid(row=6, column=1, sticky="w")
-        self.entry_num_generation = tk.Entry(self.root)
+        self.label_select_son = tk.Label(self.root, text="Seleccion Hijo: ")
+        self.label_select_son.grid(row=6, column=1, sticky="w")
+        self.entry_num_generation = tk.Spinbox(self.root, from_=0, to=100)
         self.entry_num_generation.grid(row=6, column=1, sticky="s")
         self.button_validate_num_generation = tk.Button(self.root, text="Cargar", command=self.validate_num_generation)
         self.button_validate_num_generation.grid(row=6, column=1, sticky="e")
@@ -75,15 +79,16 @@ class Interfaz:
         self.createNewCanvasModelGeneration(self.modelo_cargado,int(self.entry_num_generation.get()))
         print("validate num generation")
     
-    def updateInterfaceToInitModel(self,generationnum,bestefficiency,quantitymutations):
-        self.label_generation.config(text="Genaracion No. " + str(generationnum))        
+    def updateInterfaceToInitModel(self,generationnum,bestefficiency,quantitymutations,nameModel):
+        self.label_generation.config(text="Hijo No. " + str(generationnum))        
         self.label_best_aptitude.config(text="Mejor Eficiencia: " + str(bestefficiency))
-        self.label_quantity_mutations.config(text="Mutaciones: " + str(quantitymutations))
-    
+        self.label_quantity_mutations.config(text="Mejor hijo: " + str(quantitymutations))        
+        self.label_model_load.config(text="Modelo: " + str(nameModel))
+        
     def updateInterfaceModelLoad(self,generationnum,bestefficiency,quantitymutations):
-        self.label_generation.config(text="Genaracion No. " + str(generationnum))        
+        self.label_generation.config(text="Hijo No. " + str(generationnum))        
         self.label_best_aptitude.config(text="Eficiencia: " + str(bestefficiency))
-        self.label_quantity_mutations.config(text=" ")
+        
 
     
     def stopModel(self):
@@ -402,9 +407,15 @@ class Interfaz:
         try:
             with open(filename, 'rb') as f:
                 self.modelo_cargado = pickle.load(f)
-                if isinstance(self.modelo_cargado, Model):
-                    self.updateInterfaceToInitModel(self.modelo_cargado.generation,self.modelo_cargado.efficiency,self.modelo_cargado.quantityMutations)
-                    self.createNewCanvasModelGeneration(self.modelo_cargado,0)
+                if isinstance(self.modelo_cargado, Model):                    
+                    nombre_archivo = os.path.basename(filename)
+                    #get mejor hijo
+                    max_valor = max(self.modelo_cargado.aptitudeValues)
+                    indice_max_valor = self.modelo_cargado.aptitudeValues.index(max_valor)
+                    self.updateInterfaceToInitModel(self.modelo_cargado.generation,self.modelo_cargado.efficiency,indice_max_valor,nombre_archivo)
+                    self.updateConfigLabels(str(self.modelo_cargado.population),str(self.modelo_cargado.mutation), str(self.modelo_cargado.isgenOrEff), str(self.modelo_cargado.genOrEf))
+                    self.createNewCanvasModelGeneration(self.modelo_cargado,-1)
+                    self.graficar_aptitud(self.modelo_cargado.aptitudeValues)
                 print("Modelo cargado correctamente.")
         except FileNotFoundError:
             print("El archivo especificado no se encuentra.")
@@ -412,7 +423,7 @@ class Interfaz:
             print("Error al cargar el modelo:", e)    
     
     
-    def createNewCanvasModelGeneration(self,model,generation):        
+    def createNewCanvasModelGeneration(self,model,generation):
         if isinstance(model,Model):
             self.cleanCanvas()
             #Create all Circles
@@ -427,7 +438,7 @@ class Interfaz:
                             self.crear_arista_cargado(aristaIn,generation)
                             aristasCreated.append(aristaIn)
                 for aristaOut in node.aristasOut:
-                        if not aristaOut in aristasCreated:
+                        if not aristaOut in aristasCreated:                            
                             self.crear_arista_cargado(aristaOut,generation)
                             aristasCreated.append(aristaOut)
             self.updateInterfaceModelLoad(generation,model.getEfficiencyForOneGeneration(generation),"")
@@ -436,13 +447,22 @@ class Interfaz:
     def crear_arista_cargado(self,aristaNode,generation):
         if aristaNode.typeArista == "in":
             arista = self.create_arista_in_cargado(aristaNode,generation)
-            arista.setNewProperties2(aristaNode.capacity,aristaNode.percentages[generation],aristaNode.capacity)
+            if not generation == -1:
+                arista.setNewProperties2(aristaNode.capacity,aristaNode.percentages[generation],aristaNode.capacity)
+            else:
+                arista.setNewProperties(aristaNode.capacity,aristaNode.percentage)
         elif aristaNode.typeArista == "out":
             arista = self.create_arista_out_cargado(aristaNode,generation)
-            arista.setNewProperties2(aristaNode.capacity,aristaNode.percentages[generation],aristaNode.amounts_of_cars[generation])
+            if not generation == -1:
+                arista.setNewProperties2(aristaNode.capacity,aristaNode.percentages[generation],aristaNode.amounts_of_cars[generation])
+            else:
+                arista.setNewProperties(aristaNode.capacity,aristaNode.percentage)
         elif aristaNode.typeArista == "normal": 
             arista = self.create_arista_normal_cargado(aristaNode,generation)
-            arista.setNewProperties2(aristaNode.capacity,aristaNode.percentages[generation],aristaNode.amounts_of_cars[generation])
+            if not generation == -1:
+                arista.setNewProperties2(aristaNode.capacity,aristaNode.percentages[generation],aristaNode.amounts_of_cars[generation])
+            else:
+                arista.setNewProperties(aristaNode.capacity,aristaNode.percentage)
         
     
     def create_arista_normal_cargado(self,aristanormal,generation):
@@ -478,6 +498,16 @@ class Interfaz:
             if circle.name == name:
                 return circle
         return None
+    
+    def graficar_modelo_cargado(self):
+        self.graficar_aptitud(self.modelo_cargado.aptitudeValues)
+
+    def graficar_aptitud(self,aptitudeValues):
+        plt.plot(range(len(aptitudeValues)), aptitudeValues)
+        plt.xlabel('Índice')
+        plt.ylabel('Aptitud')
+        plt.title('Gráfico de Aptitud')
+        plt.show()
         
     
     def crear_nodo_cargado(self,node):
@@ -516,6 +546,7 @@ class Interfaz:
         model_menu.add_command(label="Ingresar Datos", command=self.saveDataFromModel)
         model_menu.add_command(label="Iniciar Modelo", command=self.initModel)
         model_menu.add_command(label="Cargar Modelo", command=self.createDialogLoadModel)
+        model_menu.add_command(label="Graficar Modelo Cargado", command=self.graficar_modelo_cargado)
         menu_bar.add_cascade(label="Modelo", menu=model_menu)
 
         canvas_menu = tk.Menu(menu_bar, tearoff=0)

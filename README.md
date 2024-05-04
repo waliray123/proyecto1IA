@@ -17,11 +17,16 @@ el siguiente comando:
 Para ejecutar este proyecto, necesitarás tener instalado Python en tu sistema. Además, asegúrate de tener instaladas las siguientes bibliotecas de Python:
 
 - `tkinter`: Esta biblioteca se utiliza para la interfaz gráfica.
+- `matplotlib`: Esta biblioteca se utiliza para generar un grafico de aptitud de la aplicacion
 
 Puedes instalar las bibliotecas necesarias mediante `pip`, utilizando el siguiente comando:
 
 ```bash
     pip install tkinter
+    pip install matplotlib
 ```
+
+
+
 
 
