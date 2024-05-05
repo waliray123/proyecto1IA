@@ -413,8 +413,15 @@ class Interfaz:
                     max_valor = max(self.modelo_cargado.aptitudeValues)
                     indice_max_valor = self.modelo_cargado.aptitudeValues.index(max_valor)
                     self.updateInterfaceToInitModel(self.modelo_cargado.generation,self.modelo_cargado.efficiency,indice_max_valor,nombre_archivo)
-                    self.updateConfigLabels(str(self.modelo_cargado.population),str(self.modelo_cargado.mutation), str(self.modelo_cargado.isgenOrEff), str(self.modelo_cargado.genOrEf))
                     self.createNewCanvasModelGeneration(self.modelo_cargado,-1)
+
+                    #Set config of the model
+                    self.population_size = int(self.modelo_cargado.population)
+                    self.mutation_rate = int(self.modelo_cargado.mutation)
+                    self.generation_or_efficiency = self.modelo_cargado.isgenOrEff
+                    self.value_generation_or_efficiency = int(self.modelo_cargado.genOrEf)
+
+                    self.updateConfigLabels(str(self.population_size),str(self.mutation_rate), str(self.generation_or_efficiency), str(self.value_generation_or_efficiency))
                     self.graficar_aptitud(self.modelo_cargado.aptitudeValues)
                 print("Modelo cargado correctamente.")
         except FileNotFoundError:

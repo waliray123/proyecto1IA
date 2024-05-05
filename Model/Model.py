@@ -63,7 +63,10 @@ class Model:
     def createNewPopulation(self):
         parents = self.selectParents()
         self.mergeParentsByPoint(parents)
-
+        for i in range(self.population):
+            for arista in self.aristasIn:
+                if isinstance(arista, AristaNode) and arista.typeArista=="in":
+                    arista.addNewPercentage(100)
     
     def mergeParentsByPoint(self,parents):        
         for i in range(0, len(parents), 2):
