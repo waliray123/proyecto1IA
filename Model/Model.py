@@ -61,12 +61,13 @@ class Model:
             print("Por porcentaje")
     
     def createNewPopulation(self):
-        parents = self.selectParents()
-        self.mergeParentsByPoint(parents)
         for i in range(self.population):
             for arista in self.aristasIn:
                 if isinstance(arista, AristaNode) and arista.typeArista=="in":
                     arista.addNewPercentage(100)
+        parents = self.selectParents()
+        self.mergeParentsByPoint(parents)
+        
     
     def mergeParentsByPoint(self,parents):        
         for i in range(0, len(parents), 2):
@@ -205,8 +206,11 @@ class Model:
         if isinstance(circle, NodeModel):
             if not circle.aristasIn:
                 return True
-            else:
-                carsToAdd = 0
+            else:                
+                try:
+                    carsToAdd = circle.amountOfCars[indexIndividual]
+                except:
+                    carsToAdd = 0
                 for arista in circle.aristasIn:
                     if isinstance(arista, AristaNode) and arista.typeArista == "normal":
                         if not (arista.circle1 in circlesAlreadySendCars):
