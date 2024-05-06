@@ -3,6 +3,7 @@ import pickle
 import threading
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
 import matplotlib.pyplot as plt
 
 
@@ -93,7 +94,7 @@ class Interfaz:
     
     def stopModel(self):
         self.controlmodel.changeStateModel()
-        self.modelo_thread.join()
+        #self.modelo_thread.join()
 
     def createConfigLabels(self):
         self.label_population = tk.Label(self.root, text="Poblacion: ")
@@ -531,6 +532,9 @@ class Interfaz:
         filename = filedialog.askopenfilename(filetypes=[("Model Files", "*.mdl")])
         if filename:
             self.loadModel(filename)
+
+    def modeloTerminadoDialog(self,ruta_archivo):
+        messagebox.showinfo("Éxito", "Modelo terminado y guardado correctamente en {}".format(ruta_archivo))
 
 
     def iniciar(self):

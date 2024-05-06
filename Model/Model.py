@@ -46,18 +46,18 @@ class Model:
                 else:                    
                     break
         elif self.isgenOrEff == "Porcentaje de eficiencia" and self.indexFoundSolution == -1:
-            while self.efficiency >= self.genOrEf:
+            while self.genOrEf >= self.efficiency and not self.stopModel:
                 if not self.stopModel:
                     self.createNewPopulation()
                     self.generation += 1
                     self.exchangeMutation()
                     self.runCars()
-                    self.updateInterfaceToInitModel()
+                    if not self.stopModel:
+                        self.updateInterfaceToInitModel()
                     if self.indexFoundSolution != -1:
                         break
                 else:
                     break 
-                
             print("Por porcentaje")
     
     def createNewPopulation(self):
@@ -137,10 +137,10 @@ class Model:
         randgen2 = random.randrange(0,len(self.genes))
         aristagen1 = self.genes[randgen1]
         aristagen2 = self.genes[randgen2]
-        valuegen1 = aristagen1.amounts_of_cars[indexIndividualToMutate]
-        valuegen2 = aristagen2.amounts_of_cars[indexIndividualToMutate]
-        aristagen1.amounts_of_cars[indexIndividualToMutate] = valuegen2
-        aristagen2.amounts_of_cars[indexIndividualToMutate] = valuegen1
+        valuegen1 = aristagen1.percentages[indexIndividualToMutate]
+        valuegen2 = aristagen2.percentages[indexIndividualToMutate]
+        aristagen1.percentages[indexIndividualToMutate] = valuegen2
+        aristagen2.percentages[indexIndividualToMutate] = valuegen1
                 
 
                 

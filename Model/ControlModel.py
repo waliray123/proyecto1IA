@@ -123,6 +123,7 @@ class ControlModel:
             pickle.dump(model, archivo)
         
         print("Objeto guardado correctamente en", ruta_archivo)
+        self.interfaz.modeloTerminadoDialog(ruta_archivo)
     
     def updateInterfaceToInitModel(self,generationnum,bestefficiency,quantitymutations):
         self.interfaz.updateInterfaceToInitModel(generationnum,bestefficiency,quantitymutations,"Modelo")
