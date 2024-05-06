@@ -85,13 +85,18 @@ class Interfaz:
         self.label_best_aptitude.config(text="Mejor Eficiencia: " + str(bestefficiency))
         self.label_quantity_mutations.config(text="Mejor hijo: " + str(quantitymutations))        
         self.label_model_load.config(text="Modelo: " + str(nameModel))
-        
+
+    def updateInterfaceToInitModel2(self,generationnum,bestefficiency,quantitymutations,nameModel):
+        self.label_generation.config(text="Generacion No. " + str(generationnum))        
+        self.label_best_aptitude.config(text="Mejor Eficiencia: " + str(bestefficiency))
+        self.label_quantity_mutations.config(text="Mejor hijo: " + str(quantitymutations))        
+        self.label_model_load.config(text="Modelo: " + str(nameModel))    
+
     def updateInterfaceModelLoad(self,generationnum,bestefficiency,quantitymutations):
         self.label_generation.config(text="Hijo No. " + str(generationnum))        
         self.label_best_aptitude.config(text="Eficiencia: " + str(bestefficiency))
         
 
-    
     def stopModel(self):
         self.controlmodel.changeStateModel()
         #self.modelo_thread.join()
